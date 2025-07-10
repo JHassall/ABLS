@@ -98,6 +98,17 @@ StyleCopReport.xml
 # but not Directory.Build.rsp, as it configures directory-level build defaults
 !Directory.Build.rsp
 *.sbr
+
+# Unity specific files
+# See https://github.com/github/gitignore/blob/main/Unity.gitignore
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Ll]ibrary/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Tt]emp/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Oo]bj/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Bb]uild/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Bb]uilds/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Ll]ogs/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Uu]ser[Ss]ettings/
+/[Uu]nity/[Aa]BLS.[Uu]nity[Uu][Ii]/[Mm]emoryCaptures/
 *.tlb
 *.tli
 *.tlh

@@ -1,8 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
+    <UserSecretsId>59c055c8-ebd1-4590-837a-2826a8fd6ea6</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude macOS metadata files from compilation -->
+    <Compile Remove="**\._*.cs" />
+  </ItemGroup>
 
 </Project>

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36221.1 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ABLS.Core", "src\ABLS.Core\ABLS.Core.csproj", "{E312FA3C-6C55-4843-B8D3-89FD516CE7FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ABLS.TestConsole", "ABLS.TestConsole\ABLS.TestConsole.csproj", "{18DEB3A4-9A0E-A7F9-A083-97DC8118B56F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{E312FA3C-6C55-4843-B8D3-89FD516CE7FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E312FA3C-6C55-4843-B8D3-89FD516CE7FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E312FA3C-6C55-4843-B8D3-89FD516CE7FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18DEB3A4-9A0E-A7F9-A083-97DC8118B56F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18DEB3A4-9A0E-A7F9-A083-97DC8118B56F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18DEB3A4-9A0E-A7F9-A083-97DC8118B56F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18DEB3A4-9A0E-A7F9-A083-97DC8118B56F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
