@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <SparkFun_BNO080_Arduino_Library.h>
 #include <SparkFun_XM125_Distance.h>
+#include <SparkFun_u-blox_GNSS_v3.h>
 #include "DataPackets.h"
 
 // A structure to hold the fused state of the Teensy
@@ -33,7 +34,7 @@ public:
     void update(); // This will be called frequently to check for new sensor data
 
     // Public methods to be called when new data arrives from specific sensors
-    void onGpsUpdate(/* GPS data packet from your GPS library */);
+    void onGpsUpdate();
     void onImuUpdate();
 
     void populatePacket(OuterSensorDataPacket* packet);
@@ -41,7 +42,7 @@ public:
 private:
     BNO080 _bno080;       // The BNO080 object
     SparkFunXM125Distance _radar; // The Acconeer XM125 Radar object
-    // Placeholder for your GPS object, e.g., SparkFun_u-blox_GNSS_Arduino myGNSS;
+    SFE_UBLOX_GNSS_SERIAL _gps; // The u-blox F9P object
 
     FusedState _currentState;
 

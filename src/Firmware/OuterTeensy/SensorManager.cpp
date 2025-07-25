@@ -32,7 +32,16 @@ void SensorManager::init() {
     }
     _radar.start(); // Start the sensor
 
-    // TODO: Add initialization for your GPS sensor here
+    // Initialize GPS on one of the Teensy's hardware serial ports
+    // NOTE: You may need to change Serial1 to the port your F9P is connected to.
+    Serial1.begin(115200);
+    if (!_gps.begin(Serial1)) {
+        Serial.println("Failed to initialize u-blox F9P GPS. Check wiring.");
+        while(1); // Halt execution
+    }
+
+    // Set the navigation rate to 10Hz, which is optimal for the F9P
+    _gps.setNavigationFrequency(10);
 
     _lastImuPredictionTime = micros();
     Serial.println("Sensor Manager Initialized.");
@@ -46,28 +55,26 @@ void SensorManager::update() {
         onImuUpdate();
     }
 
-    // TODO: Add code here to check for new GPS data and call onGpsUpdate()
-    // Example:
-    // if (myGNSS.getPVT()) { // If new GPS data is available
-    //     onGpsUpdate(/* pass the relevant GPS data here */);
-    // }
+    // Check for new GPS data. The library will process incoming messages.
+    // The getPVT method will return true only when a new navigation solution is available.
+    if (_gps.getPVT()) {
+        onGpsUpdate();
+    }
 }
 
 // --- GPS Update (The "Correction" Step) ---
-void SensorManager::onGpsUpdate(/* Pass in your GPS data object here */) {
-    // =====================================================================
-    //  PLACEHOLDER: Replace with your actual GPS library's data
-    // =====================================================================
+void SensorManager::onGpsUpdate() {
     // This function is the "Correction" step. It snaps our state to the
-    // high-accuracy GPS reading.
+    // high-accuracy GPS reading from the F9P.
 
-    // Example using a hypothetical gpsObject:
-    // _currentState.latitude = gpsObject.latitude;
-    // _currentState.longitude = gpsObject.longitude;
-    // _currentState.altitude = gpsObject.altitude;
-    // _currentState.speed = gpsObject.groundSpeed;
-    // _currentState.heading = gpsObject.heading;
-    // _currentState.satellites = gpsObject.satelliteCount;
+    // Note the scaling factors: the library returns values as integers.
+    _currentState.latitude = _gps.getLatitude() / 10000000.0;
+    _currentState.longitude = _gps.getLongitude() / 10000000.0;
+    _currentState.altitude = _gps.getAltitude() / 1000.0; // From mm to m
+    _currentState.speed = _gps.getGroundSpeed() / 1000.0; // From mm/s to m/s
+    _currentState.heading = _gps.getHeading() / 100000.0; // From degE-5 to deg
+    _currentState.satellites = _gps.getSIV();
+}
 }
 
 // --- IMU Update (The "Prediction" Step) ---
