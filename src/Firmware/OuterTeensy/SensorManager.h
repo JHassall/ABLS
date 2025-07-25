@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <SparkFun_BNO080_Arduino_Library.h>
+#include <SparkFun_XM125_Distance.h>
 #include "DataPackets.h"
 
 // A structure to hold the fused state of the Teensy
@@ -38,7 +39,8 @@ public:
     void populatePacket(OuterSensorDataPacket* packet);
 
 private:
-    BNO080 _bno080; // The BNO080 object
+    BNO080 _bno080;       // The BNO080 object
+    SparkFunXM125Distance _radar; // The Acconeer XM125 Radar object
     // Placeholder for your GPS object, e.g., SparkFun_u-blox_GNSS_Arduino myGNSS;
 
     FusedState _currentState;

@@ -25,7 +25,14 @@ void SensorManager::init() {
     // orientation (Roll, Pitch, Yaw) without magnetic interference.
     _bno080.enableGameRotationVector(10); // Request updates at 100Hz (10ms)
 
-    // TODO: Add initialization for your GPS and Radar sensors here
+    // Initialize Radar
+    if (!_radar.begin()) {
+        Serial.println("Failed to initialize XM125 Radar. Check wiring.");
+        while(1); // Halt execution
+    }
+    _radar.start(); // Start the sensor
+
+    // TODO: Add initialization for your GPS sensor here
 
     _lastImuPredictionTime = micros();
     Serial.println("Sensor Manager Initialized.");
@@ -109,6 +116,10 @@ void SensorManager::populatePacket(OuterSensorDataPacket* packet) {
     packet->Pitch = _currentState.pitch;
     packet->Yaw = _currentState.yaw;
 
-    // TODO: Read the radar sensor and populate the packet
-    // packet->RadarDistance = readRadar(); 
+    // Read the radar sensor and populate the packet
+    if (_radar.dataReady()) {
+        packet->RadarDistance = _radar.getDistance();
+    } else {
+        // Keep the last known value if no new data is ready
+    } 
 }
