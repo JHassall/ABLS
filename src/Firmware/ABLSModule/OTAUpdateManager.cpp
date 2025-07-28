@@ -29,11 +29,22 @@ bool OTAUpdateManager::initialize() {
     // Initialize version manager
     VersionManager::initialize();
     
+    // Initialize RgFModuleUpdater
+    if (!RgFModuleUpdater::initialize()) {
+        DiagnosticManager::logMessage(LOG_ERROR, "OTAUpdateManager", "Failed to initialize RgFModuleUpdater");
+        return false;
+    }
+    
+    // Set up RgFModuleUpdater callbacks
+    // Note: DiagnosticManager uses static methods, so we'll pass nullptr and handle logging separately
+    RgFModuleUpdater::setDiagnosticManager(nullptr);
+    RgFModuleUpdater::setProgressCallback([](uint8_t progress, UpdateStatus_t status, const String& message) {
+        // Forward progress to our reporting system
+        reportProgress(UPDATE_DOWNLOADING, progress, message);
+    });
+    
     // Setup OTA UDP socket
     setupOTASocket();
-    
-    // Initialize FlasherTxx for dual-bank flash support
-    // Note: FlasherTxx initialization will be done when update starts
     
     _networkInitialized = true;
     _updateInProgress = false;
@@ -305,6 +316,18 @@ void OTAUpdateManager::cleanup() {
     _bytesReceived = 0;
     _expectedSize = 0;
     _expectedChecksum = 0;
+}
+
+void OTAUpdateManager::reportProgress(UpdateStatus_t status, uint8_t progress, const String& message) {
+    // Update version manager with progress
+    VersionManager::setUpdateStatus(status, progress);
+    
+    // Log progress message
+    DiagnosticManager::logMessage(LOG_INFO, "OTAUpdateManager", 
+        String("Progress: ") + String(progress) + "% - " + message);
+    
+    // Update last progress report time
+    _lastProgressReport = millis();
 }
 
 void OTAUpdateManager::setupOTASocket() {

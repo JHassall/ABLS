@@ -5,14 +5,16 @@
 #include <QNEthernet.h>
 #include "VersionManager.h"
 #include "DataPackets.h"
+#include "RgFModuleUpdater.h"
 
 using namespace qindesign::network;
 
 // =================================================================
-// OTA Update Manager for ABLS Unified Firmware
+// OTA Update Manager for ABLS Firmware
 // =================================================================
-// Handles Over-The-Air firmware updates using FlasherX approach
-// with Teensy 4.1 dual-bank flash for rollback capability
+// Handles firmware updates using RgFModuleUpdater
+// (based on FlasherX by Joe Pasquariello https://github.com/joepasquariello/FlasherX.git) with Teensy 4.1 
+// dual-bank flash for rollback capability
 // =================================================================
 
 // OTA Update command packet from Toughbook

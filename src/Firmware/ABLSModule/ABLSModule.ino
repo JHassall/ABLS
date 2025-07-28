@@ -84,11 +84,11 @@ void setup() {
         while(1) { delay(1000); } // Halt on hydraulic failure
     }
     
-    // Step 6: Initialize OTA update system
+    // Step 6: Initialize Firmware Update system
     Serial.println("Initializing OTA update system...");
     if (!OTAUpdateManager::initialize()) {
-        DiagnosticManager::logError("Setup", "OTA system initialization failed");
-        DiagnosticManager::showErrorScreen("OTA Init Failed");
+        DiagnosticManager::logError("Setup", "Firmware Updater initialization failed");
+        DiagnosticManager::showErrorScreen("Updater Init Failed");
         while(1) { delay(1000); } // Halt on OTA failure
     }
     
