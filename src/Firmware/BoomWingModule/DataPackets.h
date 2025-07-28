@@ -26,6 +26,11 @@ struct SensorDataPacket {
     float GpsHeading = 0.0;
     float GpsSpeed = 0.0;
     int Satellites = 0;
+    
+    // RTK Quality Data
+    uint8_t RTKStatus = 0;           // 0=None, 1=Float, 2=Fixed
+    float HorizontalAccuracy = 999.0; // Accuracy in meters
+    uint32_t GPSTimestamp = 0;       // iTOW for synchronization
 
     // IMU Data
     float Roll = 0.0;

@@ -1,7 +1,6 @@
 #include "NetworkManager.h"
 
 NetworkManager::NetworkManager(IPAddress remoteIp, unsigned int remotePort, unsigned int localPort) :
-    _broadcastIp(255, 255, 255, 255),
     _remoteIp(remoteIp),
     _remotePort(remotePort),
     _localPort(localPort)
@@ -38,12 +37,6 @@ void NetworkManager::sendSensorData(const SensorDataPacket& packet) {
     _commandUdp.beginPacket(_remoteIp, SENSOR_DATA_PORT);
     _commandUdp.write(jsonBuffer);
     _commandUdp.endPacket();
-}
-
-void NetworkManager::broadcastRtcmData(const uint8_t* data, size_t len) {
-    _rtcmUdp.beginPacket(_broadcastIp, RTCM_CORRECTION_PORT);
-    _rtcmUdp.write(data, len);
-    _rtcmUdp.endPacket();
 }
 
 int NetworkManager::readRtcmData(uint8_t* buffer, size_t maxSize) {

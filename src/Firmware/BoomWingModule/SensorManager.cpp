@@ -1,9 +1,19 @@
 #include "SensorManager.h"
 #include <Wire.h>
 
+// Static member initialization
+SensorManager* SensorManager::_instance = nullptr;
+
 // --- Constructor ---
 SensorManager::SensorManager() {
-    // Constructor can be used for initial setup if needed
+    // Set static instance pointer for callback access
+    _instance = this;
+    _freshGpsData = false;
+    
+    // Initialize RTK quality monitoring
+    _rtkStatus = RTK_NONE;
+    _horizontalAccuracy = 999.0; // Start with poor accuracy
+    _rtkStatusChanged = false;
 }
 
 // --- Initialization ---
@@ -54,6 +64,10 @@ void SensorManager::init() {
     } else {
         Serial.println("Dynamic platform model set to AIRBORNE1G.");
     }
+    
+    // Configure GPS for callback-based high-precision data processing
+    _gps.setAutoHPPOSLLHcallbackPtr(&gpsHPPOSLLHCallback);
+    Serial.println("GPS HPPOSLLH callback configured for real-time processing.");
 
     // Save the new navigation settings to flash
     if (_gps.saveConfigSelective(VAL_CFG_SUBSEC_NAVCONF)) {
@@ -67,10 +81,11 @@ void SensorManager::init() {
 
 // --- Main Update Loop ---
 void SensorManager::update() {
-    // Always check for new data from sensors first.
-    _gps.checkUblox();
+    // Check for incoming GPS data and process any pending callbacks
+    _gps.checkUblox();     // Check for new GPS data
+    _gps.checkCallbacks(); // Process any pending GPS callbacks
 
-    // Now, run the fusion algorithm with the latest available data.
+    // Run the sensor fusion algorithm (now callback-driven for GPS)
     updateFusion();
 }
 
@@ -79,23 +94,10 @@ void SensorManager::updateFusion() {
     unsigned long currentTime = millis();
 
     // --- Correct step (with GPS) ---
-    // getHPPOSLLH provides high-precision position data for RTK applications
-    if (_gps.getHPPOSLLH() && (_gps.getFixType() == 3) && (_gps.getCarrierSolutionType() == 2)) { // New, valid, 3D RTK Fixed solution
-        // Use high-precision GPS data for maximum accuracy
-        int32_t lat = _gps.getHighResLatitude();
-        int8_t latHp = _gps.getHighResLatitudeHp();
-        int32_t lon = _gps.getHighResLongitude();
-        int8_t lonHp = _gps.getHighResLongitudeHp();
-        int32_t alt = _gps.getMeanSeaLevel();
-        int8_t altHp = _gps.getMeanSeaLevelHp();
-        
-        // Convert to high-precision coordinates
-        _fusedLatitude = ((double)lat) / 10000000.0 + ((double)latHp) / 1000000000.0;
-        _fusedLongitude = ((double)lon) / 10000000.0 + ((double)lonHp) / 1000000000.0;
-        _fusedAltitude = ((double)alt + (double)altHp * 0.1) / 1000.0; // Convert mm to meters
-
-        // Get velocity in North-East-Down (NED) frame from GPS
-        // Calculate velocity components from ground speed and heading
+    // Check if fresh GPS data is available from callback
+    if (_freshGpsData) {
+        // GPS position data has already been updated by the callback
+        // Now update velocity components using current GPS data
         float groundSpeed = _gps.getGroundSpeed() / 1000.0; // Convert from mm/s to m/s
         float heading = _gps.getHeading() / 100000.0; // Convert from 1e-5 degrees to degrees
         float headingRad = heading * PI / 180.0; // Convert to radians
@@ -104,8 +106,10 @@ void SensorManager::updateFusion() {
         _velocityY = groundSpeed * sin(headingRad); // East velocity component
         _velocityZ = 0.0; // Vertical velocity not available from basic GPS data
 
-        _lastGpsUpdateTime = currentTime;
-        _lastImuUpdateTime = currentTime; // Reset IMU timer to sync
+        // Clear the fresh GPS data flag
+        _freshGpsData = false;
+        
+        Serial.println("Sensor Fusion: GPS correction applied via callback");
     }
     // --- Predict step (with IMU) ---
     else if (_bno080.dataAvailable()) {
@@ -162,11 +166,10 @@ void SensorManager::populatePacket(SensorDataPacket* packet) {
     packet->GpsSpeed = _gps.getGroundSpeed();
     packet->Satellites = _gps.getSIV();
     
-    // RTK Quality Assessment - monitor horizontal accuracy for RTK performance
-    uint32_t accuracy = _gps.getHorizontalAccuracy();
-    float horizontalAccuracy = accuracy / 10000.0; // Convert from mm * 10^-1 to meters
-    // Note: Could add accuracy to packet structure for monitoring RTK quality
-    (void)horizontalAccuracy; // Suppress unused variable warning
+    // RTK Quality Data - now included in data packets for Toughbook decision making
+    packet->RTKStatus = (uint8_t)_rtkStatus;           // Current RTK status (0=None, 1=Float, 2=Fixed)
+    packet->HorizontalAccuracy = _horizontalAccuracy;   // Current horizontal accuracy in meters
+    packet->GPSTimestamp = _gps.getTimeOfWeek();       // GPS time of week for synchronization
 
     // IMU Data
     if (_bno080.dataAvailable()) {
@@ -193,4 +196,80 @@ void SensorManager::populatePacket(SensorDataPacket* packet) {
 void SensorManager::forwardRtcmToGps(const uint8_t* data, size_t len) {
     // Forward the received RTCM data directly to the GPS module
     _gps.pushRawData(const_cast<uint8_t*>(data), len);
+}
+
+// --- GPS HPPOSLLH Callback Function ---
+// This function is called automatically when new high-precision GPS data arrives
+void SensorManager::gpsHPPOSLLHCallback(UBX_NAV_HPPOSLLH_data_t *ubxDataStruct) {
+    if (_instance == nullptr) return; // Safety check
+    
+    // Extract high-precision GPS data following SparkFun example pattern
+    long highResLatitude = ubxDataStruct->lat;
+    int highResLatitudeHp = ubxDataStruct->latHp;
+    long highResLongitude = ubxDataStruct->lon;
+    int highResLongitudeHp = ubxDataStruct->lonHp;
+    long altitude = ubxDataStruct->hMSL;
+    int altitudeHp = ubxDataStruct->hMSLHp;
+    
+    // Calculate horizontal accuracy for RTK quality assessment
+    float horizAccuracy = ((float)ubxDataStruct->hAcc) / 10000.0; // Convert hAcc from mm*0.1 to m
+    
+    // Update horizontal accuracy tracking
+    _instance->_horizontalAccuracy = horizAccuracy;
+    
+    // Determine RTK status based on horizontal accuracy
+    RTKStatus_t newStatus;
+    if (horizAccuracy < 0.02) {          // Sub-2cm = RTK Fixed
+        newStatus = RTK_FIXED;
+    } else if (horizAccuracy < 0.5) {    // 2cm-50cm = RTK Float  
+        newStatus = RTK_FLOAT;
+    } else {                             // >50cm = Standard GPS
+        newStatus = RTK_NONE;
+    }
+    
+    // Check for RTK status changes
+    if (newStatus != _instance->_rtkStatus) {
+        _instance->_rtkStatus = newStatus;
+        _instance->_rtkStatusChanged = true;
+        
+        // Print RTK status change notifications
+        Serial.print(F("RTK Status Change: "));
+        switch (newStatus) {
+            case RTK_FIXED:
+                Serial.println(F("RTK FIXED - High precision mode (<2cm)"));
+                break;
+            case RTK_FLOAT:
+                Serial.println(F("RTK FLOAT - Medium precision mode (2-50cm)"));
+                break;
+            case RTK_NONE:
+                Serial.println(F("RTK NONE - Standard GPS mode (>50cm)"));
+                break;
+        }
+    }
+    
+    // Convert to high-precision coordinates for sensor fusion
+    _instance->_fusedLatitude = ((double)highResLatitude) / 10000000.0 + ((double)highResLatitudeHp) / 1000000000.0;
+    _instance->_fusedLongitude = ((double)highResLongitude) / 10000000.0 + ((double)highResLongitudeHp) / 1000000000.0;
+    _instance->_fusedAltitude = ((double)altitude + (double)altitudeHp * 0.1) / 1000.0; // Convert mm to meters
+    
+    // Reset timing for sensor fusion synchronization
+    _instance->_lastGpsUpdateTime = millis();
+    _instance->_lastImuUpdateTime = _instance->_lastGpsUpdateTime; // Sync IMU timer
+    
+    // Set flag indicating fresh GPS data is available
+    _instance->_freshGpsData = true;
+    
+    // Print debug information following SparkFun example format
+    Serial.println();
+    Serial.print(F("Hi Res Lat: "));
+    Serial.print(highResLatitude);
+    Serial.print(F(" "));
+    Serial.print(highResLatitudeHp);
+    Serial.print(F(" Hi Res Long: "));
+    Serial.print(highResLongitude);
+    Serial.print(F(" "));
+    Serial.print(highResLongitudeHp);
+    Serial.print(F(" Horiz accuracy: "));
+    Serial.print(horizAccuracy, 4);
+    Serial.println(F(" m"));
 }

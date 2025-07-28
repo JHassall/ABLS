@@ -14,9 +14,8 @@ public:
     void sendSensorData(const SensorDataPacket& packet);
 
 
-    // New functions for RTCM data
+    // RTCM data functions - Wing modules only receive RTCM from Centre module
     void beginRtcmListener();
-    void broadcastRtcmData(const uint8_t* data, size_t len);
     int readRtcmData(uint8_t* buffer, size_t maxSize);
 
 private:
@@ -24,7 +23,6 @@ private:
     EthernetUDP _sensorUdp;
     EthernetUDP _commandUdp;
     EthernetUDP _rtcmUdp;     // UDP socket for RTCM data
-    IPAddress _broadcastIp;
     IPAddress _remoteIp;
     unsigned int _remotePort;
     unsigned int _localPort;
