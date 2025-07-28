@@ -9,7 +9,6 @@ namespace ABLS.Core.Networking
     /// Manages all network communication for the ABLS application.
     /// </summary>
     public class NetworkManager
-    {
         public event Action<SensorDataPacket> OnSensorDataReceived;
 
         private readonly UdpListener<SensorDataPacket> _sensorListener;
