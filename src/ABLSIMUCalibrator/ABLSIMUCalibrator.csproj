@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <AssemblyTitle>ABLS IMU Calibrator</AssemblyTitle>
+    <AssemblyDescription>Professional IMU calibration tool for ABLS agricultural boom control system</AssemblyDescription>
+    <AssemblyCompany>RgF Agricultural Systems</AssemblyCompany>
+    <AssemblyProduct>ABLS IMU Calibrator</AssemblyProduct>
+    <AssemblyCopyright>Copyright © 2025 RgF Agricultural Systems</AssemblyCopyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+  </ItemGroup>
+
+
+
+</Project>

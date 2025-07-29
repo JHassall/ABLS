@@ -1,0 +1,292 @@
+<Window x:Class="ABLSIMUCalibrator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ABLS IMU Calibrator - Professional Boom Control Calibration" 
+        Height="800" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
+    
+    <Window.Resources>
+        <!-- Professional styling for agricultural application -->
+        <Style x:Key="HeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#2E7D32"/>
+            <Setter Property="Margin" Value="0,10,0,5"/>
+        </Style>
+        
+        <Style x:Key="StatusStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="5,2"/>
+        </Style>
+        
+        <Style x:Key="CalibrationButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        
+        <Style x:Key="DataStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#E8F5E8" Padding="15">
+            <StackPanel>
+                <TextBlock Text="ABLS IMU Calibrator" FontSize="24" FontWeight="Bold" Foreground="#1B5E20"/>
+                <TextBlock Text="Professional IMU calibration for agricultural boom control systems" FontSize="14" Foreground="#2E7D32"/>
+                <TextBlock Text="Ensure boom is in specified positions during calibration for accurate reference frame establishment" 
+                          FontSize="12" Foreground="#666" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Connection Status -->
+            <GroupBox Grid.Column="0" Header="Module Connection Status" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Network Configuration" Style="{StaticResource HeaderStyle}"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Target IP:" Width="80" Style="{StaticResource StatusStyle}"/>
+                        <TextBox x:Name="txtTargetIP" Text="192.168.1.100" Width="120" Height="25"/>
+                        <Button x:Name="btnConnect" Content="Connect" Width="80" Height="25" Margin="10,0,0,0" Click="BtnConnect_Click"/>
+                    </StackPanel>
+                    
+                    <TextBlock Text="Module Status" Style="{StaticResource HeaderStyle}"/>
+                    
+                    <StackPanel x:Name="pnlModuleStatus">
+                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <Ellipse x:Name="ellLeftStatus" Width="12" Height="12" Fill="Red" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="txtLeftStatus" Text="Left Wing Module: OFFLINE" Style="{StaticResource StatusStyle}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <Ellipse x:Name="ellCentreStatus" Width="12" Height="12" Fill="Red" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="txtCentreStatus" Text="Centre Module: OFFLINE" Style="{StaticResource StatusStyle}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <Ellipse x:Name="ellRightStatus" Width="12" Height="12" Fill="Red" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="txtRightStatus" Text="Right Wing Module: OFFLINE" Style="{StaticResource StatusStyle}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="IMU Accuracy Status" Style="{StaticResource HeaderStyle}"/>
+                    <ScrollViewer Height="150" VerticalScrollBarVisibility="Auto">
+                        <TextBlock x:Name="txtIMUAccuracy" Style="{StaticResource DataStyle}" 
+                                  Text="Connect to modules to view IMU accuracy status..."/>
+                    </ScrollViewer>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Multi-Sensor Calibration Workflow -->
+            <GroupBox Grid.Column="1" Header="Multi-Sensor Calibration Workflow" Margin="5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Professional 3-Sensor Calibration" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="IMU + Ram Potentiometers + Radar" FontSize="12" Foreground="#666" Margin="0,0,0,10"/>
+                        
+                        <!-- Manual Level Setting -->
+                        <Border Background="#FFF3E0" Padding="10" Margin="0,5" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="Step 1: Manual Level Setting" FontWeight="Bold" FontSize="14" Foreground="#E65100"/>
+                                <TextBlock Text="• Physically measure boom tip heights to ground" FontSize="11" Margin="5,2,0,0"/>
+                                <TextBlock Text="• Adjust rams until all tips are equal height" FontSize="11" Margin="5,0,0,0"/>
+                                <TextBlock Text="• Press 'Set Level' to establish reference" FontSize="11" Margin="5,0,0,5"/>
+                                
+                                <Button x:Name="btnSetLevelReference" Content="🎯 Set Level Reference" 
+                                       Height="35" FontSize="13" FontWeight="Bold" 
+                                       Background="#FF9800" Foreground="White" BorderThickness="0" Margin="0,5"
+                                       Click="BtnSetLevelReference_Click"/>
+                                <TextBlock x:Name="txtLevelReferenceStatus" Text="Not set - Measure boom tips first" 
+                                          Foreground="Red" FontSize="11" Margin="5,0"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Multi-Point Calibration -->
+                        <TextBlock Text="Step 2: Multi-Point Sensor Calibration" FontWeight="Bold" FontSize="14" Margin="0,15,0,5"/>
+                        
+                        <StackPanel x:Name="pnlCalibrationPoints">
+                            <!-- Level Position -->
+                            <Border Background="#E8F5E8" Padding="8" Margin="0,3" CornerRadius="3">
+                                <StackPanel>
+                                    <TextBlock Text="📏 Level Position (Reference)" FontWeight="Bold" FontSize="12"/>
+                                    <Button x:Name="btnCaptureLevelPosition" Content="Capture Level Data" 
+                                           Height="30" FontSize="11" Margin="0,3"
+                                           Style="{StaticResource CalibrationButtonStyle}" Click="BtnCaptureLevelPosition_Click"/>
+                                    <TextBlock x:Name="txtLevelStatus" Text="Not captured" Foreground="Red" FontSize="10" Margin="3,0"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Maximum Up Position -->
+                            <Border Background="#E3F2FD" Padding="8" Margin="0,3" CornerRadius="3">
+                                <StackPanel>
+                                    <TextBlock Text="⬆️ Maximum Up Position" FontWeight="Bold" FontSize="12"/>
+                                    <Button x:Name="btnCaptureMaxUpPosition" Content="Capture Max Up Data" 
+                                           Height="30" FontSize="11" Margin="0,3"
+                                           Style="{StaticResource CalibrationButtonStyle}" Click="BtnCaptureMaxUpPosition_Click"/>
+                                    <TextBlock x:Name="txtMaxUpStatus" Text="Not captured" Foreground="Red" FontSize="10" Margin="3,0"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Maximum Down Position -->
+                            <Border Background="#FFF3E0" Padding="8" Margin="0,3" CornerRadius="3">
+                                <StackPanel>
+                                    <TextBlock Text="⬇️ Maximum Down Position" FontWeight="Bold" FontSize="12"/>
+                                    <Button x:Name="btnCaptureMaxDownPosition" Content="Capture Max Down Data" 
+                                           Height="30" FontSize="11" Margin="0,3"
+                                           Style="{StaticResource CalibrationButtonStyle}" Click="BtnCaptureMaxDownPosition_Click"/>
+                                    <TextBlock x:Name="txtMaxDownStatus" Text="Not captured" Foreground="Red" FontSize="10" Margin="3,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        
+                        <!-- Calibration Progress -->
+                        <TextBlock Text="Calibration Progress" FontWeight="Bold" FontSize="12" Margin="0,10,0,5"/>
+                        <ProgressBar x:Name="progressCalibration" Height="20" Minimum="0" Maximum="4" Value="0" 
+                                    Background="#F5F5F5" Foreground="#4CAF50"/>
+                        <TextBlock x:Name="txtCalibrationProgress" Text="0/4 steps completed" 
+                                  FontSize="10" HorizontalAlignment="Center" Margin="0,2"/>
+                        
+                        <Separator Margin="0,15,0,10"/>
+                        
+                        <!-- Action Buttons -->
+                        <Button x:Name="btnCompleteCalibration" Content="✅ Complete Multi-Sensor Calibration" 
+                               Height="45" FontSize="14" FontWeight="Bold" 
+                               Background="#4CAF50" Foreground="White" BorderThickness="0"
+                               Click="BtnCompleteCalibration_Click" IsEnabled="False"/>
+                        
+                        <Button x:Name="btnAbortCalibration" Content="❌ Abort Calibration" 
+                               Height="30" FontSize="11" 
+                               Background="#D32F2F" Foreground="White" BorderThickness="0" Margin="0,8,0,0"
+                               Click="BtnAbortCalibration_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+
+            <!-- Real-time Multi-Sensor Data -->
+            <GroupBox Grid.Column="2" Header="Real-time Multi-Sensor Data" Margin="5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Live 3-Sensor Readings" Style="{StaticResource HeaderStyle}"/>
+                        
+                        <!-- IMU Data -->
+                        <Border Background="#E8F5E8" Padding="5" Margin="0,3" CornerRadius="3">
+                            <StackPanel>
+                                <TextBlock Text="🧭 IMU Sensors" FontWeight="Bold" FontSize="12" Foreground="#2E7D32"/>
+                                
+                                <TextBlock Text="Quaternion (Orientation)" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="50" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtQuaternionData" Style="{StaticResource DataStyle}"
+                                              Text="Connect to modules to view quaternion data..."/>
+                                </ScrollViewer>
+                                
+                                <TextBlock Text="Linear Acceleration (m/s²)" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="40" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtLinearAccelData" Style="{StaticResource DataStyle}"
+                                              Text="Connect to modules to view linear acceleration..."/>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Ram Potentiometer Data -->
+                        <Border Background="#E3F2FD" Padding="5" Margin="0,3" CornerRadius="3">
+                            <StackPanel>
+                                <TextBlock Text="🔧 Ram Potentiometers" FontWeight="Bold" FontSize="12" Foreground="#1976D2"/>
+                                
+                                <TextBlock Text="Hydraulic Ram Positions (%)" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="60" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtRamPositionData" Style="{StaticResource DataStyle}"
+                                              Text="Connect to modules to view ram positions..."/>
+                                </ScrollViewer>
+                                
+                                <TextBlock Text="Ram-Calculated Boom Angles" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="50" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtRamBoomAngles" Style="{StaticResource DataStyle}"
+                                              Text="Calibration required for ram-based angles..."/>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Radar Data -->
+                        <Border Background="#FFF3E0" Padding="5" Margin="0,3" CornerRadius="3">
+                            <StackPanel>
+                                <TextBlock Text="📡 Radar Sensors" FontWeight="Bold" FontSize="12" Foreground="#F57C00"/>
+                                
+                                <TextBlock Text="Ground Distance (m)" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="50" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtRadarData" Style="{StaticResource DataStyle}"
+                                              Text="Connect to modules to view radar distance..."/>
+                                </ScrollViewer>
+                                
+                                <TextBlock Text="⚠️ Note: Radar affected by vegetation" FontSize="9" 
+                                          Foreground="#FF6F00" Margin="0,2" FontStyle="Italic"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Multi-Sensor Correlation -->
+                        <Border Background="#F3E5F5" Padding="5" Margin="0,5,0,3" CornerRadius="3">
+                            <StackPanel>
+                                <TextBlock Text="🎯 Multi-Sensor Correlation" FontWeight="Bold" FontSize="12" Foreground="#7B1FA2"/>
+                                
+                                <TextBlock Text="Calibrated Boom Angles (°)" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="60" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtCalibratedBoomAngles" Style="{StaticResource DataStyle}"
+                                              Text="Complete calibration to view correlated angles..."/>
+                                </ScrollViewer>
+                                
+                                <TextBlock Text="Sensor Agreement Status" FontWeight="Bold" FontSize="10" Margin="0,3,0,1"/>
+                                <ScrollViewer Height="50" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="txtSensorAgreement" Style="{StaticResource DataStyle}"
+                                              Text="Calibration required for sensor agreement analysis..."/>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Data Quality Indicators -->
+                        <TextBlock Text="Data Quality" FontWeight="Bold" FontSize="12" Margin="0,5,0,3"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <TextBlock Text="IMU:" FontSize="10" Width="35"/>
+                            <Ellipse x:Name="ellIMUQuality" Width="12" Height="12" Fill="Gray" Margin="2,0"/>
+                            <TextBlock Text="RAM:" FontSize="10" Width="35" Margin="10,0,0,0"/>
+                            <Ellipse x:Name="ellRAMQuality" Width="12" Height="12" Fill="Gray" Margin="2,0"/>
+                            <TextBlock Text="RADAR:" FontSize="10" Width="45" Margin="10,0,0,0"/>
+                            <Ellipse x:Name="ellRadarQuality" Width="12" Height="12" Fill="Gray" Margin="2,0"/>
+                        </StackPanel>
+                        <TextBlock Text="🟢 Good  🟡 Fair  🔴 Poor  ⚫ No Data" FontSize="9" 
+                                  Foreground="#666" Margin="0,2" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="2" Height="30">
+            <StatusBarItem>
+                <TextBlock x:Name="txtStatusBar" Text="Ready - Connect to ABLS modules to begin calibration"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="txtTimestamp" Text=""/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
