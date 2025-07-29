@@ -99,10 +99,22 @@ private:
     uint32_t _lastImuUpdateTime;
     uint32_t _lastFusionUpdate;
     
-    // IMU Data
+    // IMU Data - Enhanced with SparkFun BNO080 comprehensive features
     float _imuQuatI, _imuQuatJ, _imuQuatK, _imuQuatReal;
     float _imuAccelX, _imuAccelY, _imuAccelZ;
     float _imuGyroX, _imuGyroY, _imuGyroZ;
+    
+    // Linear acceleration (gravity-compensated) for motion analysis
+    float _imuLinAccelX, _imuLinAccelY, _imuLinAccelZ;
+    
+    // Accuracy monitoring for each sensor type
+    byte _imuQuatAccuracy, _imuAccelAccuracy, _imuGyroAccuracy;
+    
+    // Calibration and performance monitoring
+    uint32_t _lastCalibrationCheck;
+    uint32_t _imuDataCount;
+    uint32_t _imuStartTime;
+    
     bool _imuDataValid;
     
     // Radar Data
