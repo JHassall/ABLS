@@ -10,6 +10,9 @@
 #include "DiagnosticManager.h"
 #include "HydraulicController.h"
 #include "SensorManager.h"
+#include "VersionManager.h"
+#include "UpdateSafetyManager.h"
+#include "RgFModuleUpdater.h"
 
 NetworkManager::NetworkManager() :
     _initialized(false),
@@ -188,6 +191,20 @@ bool NetworkManager::startUDPSockets() {
         return false;
     }
     
+    // Start RgFModuleUpdate command UDP (all modules)
+    if (!_updateCommandUdp.begin(OTA_COMMAND_PORT)) {
+        logNetworkEvent("Failed to start RgFModuleUpdate command UDP on port " + String(OTA_COMMAND_PORT), LOG_ERROR);
+        return false;
+    }
+    logNetworkEvent("RgFModuleUpdate command UDP started on port " + String(OTA_COMMAND_PORT));
+    
+    // Start RgFModuleUpdate status UDP (all modules)
+    if (!_updateStatusUdp.begin(OTA_RESPONSE_PORT)) {
+        logNetworkEvent("Failed to start RgFModuleUpdate status UDP on port " + String(OTA_RESPONSE_PORT), LOG_ERROR);
+        return false;
+    }
+    logNetworkEvent("RgFModuleUpdate status UDP started on port " + String(OTA_RESPONSE_PORT));
+    
     logNetworkEvent("All UDP sockets started successfully");
     return true;
 }
@@ -208,6 +225,9 @@ void NetworkManager::update() {
         processIncomingRtcm();
         _lastRtcmCheck = now;
     }
+    
+    // Process RgFModuleUpdate commands (all modules)
+    processRgFModuleUpdateCommands();
     
     // Update statistics every second
     if (now - _lastStatsUpdate >= 1000) {
@@ -238,14 +258,32 @@ int NetworkManager::readCommandPacket(ControlCommandPacket* packet) {
     if (!_initialized || !_enableCommandReceive || !packet) return 0;
     
     int packetSize = _commandUdp.parsePacket();
-    if (packetSize > 0 && packetSize == sizeof(ControlCommandPacket)) {
-        _commandUdp.read((uint8_t*)packet, sizeof(ControlCommandPacket));
-        _packetsReceived++;
-        
-        DiagnosticManager::logMessage(LOG_DEBUG, "NetworkManager", 
-            "Command packet received from Toughbook (" + String(packetSize) + " bytes)");
-        
-        return packetSize;
+    if (packetSize > 0) {
+        if (packetSize == sizeof(ControlCommandPacket)) {
+            // CRITICAL FIX: Validate actual bytes read to prevent partial/corrupt packets
+            int bytesRead = _commandUdp.read((uint8_t*)packet, sizeof(ControlCommandPacket));
+            
+            if (bytesRead != sizeof(ControlCommandPacket)) {
+                DiagnosticManager::logError("NetworkManager", 
+                    "Incomplete command packet received: " + String(bytesRead) + "/" + String(sizeof(ControlCommandPacket)) + " bytes");
+                return -1; // Error indicator for incomplete packet
+            }
+            
+            _packetsReceived++;
+            
+            DiagnosticManager::logMessage(LOG_DEBUG, "NetworkManager", 
+                "Command packet received from Toughbook (" + String(bytesRead) + " bytes)");
+            
+            return bytesRead;
+        } else {
+            // ENHANCED LOGGING: Log wrong-size packets for debugging/security monitoring
+            DiagnosticManager::logError("NetworkManager", 
+                "Invalid command packet size received: " + String(packetSize) + " bytes (expected " + String(sizeof(ControlCommandPacket)) + " bytes)");
+            
+            // Flush the invalid packet to prevent buffer issues
+            _commandUdp.flush();
+            return -2; // Error indicator for wrong-size packet
+        }
     }
     
     return 0;
@@ -274,12 +312,33 @@ int NetworkManager::readRtcmData(uint8_t* buffer, size_t maxSize) {
     int packetSize = _rtcmUdp.parsePacket();
     if (packetSize > 0 && packetSize <= (int)maxSize) {
         int bytesRead = _rtcmUdp.read(buffer, packetSize);
+        
+        // ENHANCED RTCM VALIDATION: Validate actual bytes read
+        if (bytesRead != packetSize) {
+            DiagnosticManager::logError("NetworkManager", 
+                "Incomplete RTCM packet received: " + String(bytesRead) + "/" + String(packetSize) + " bytes");
+            return -1; // Error indicator
+        }
+        
+        // ENHANCED RTCM VALIDATION: Basic RTCM message format validation
+        if (!validateRtcmData(buffer, bytesRead)) {
+            DiagnosticManager::logError("NetworkManager", 
+                "Invalid RTCM data format detected - discarding " + String(bytesRead) + " bytes");
+            return -2; // Invalid format indicator
+        }
+        
         _rtcmBytesReceived += bytesRead;
         
         DiagnosticManager::logMessage(LOG_DEBUG, "NetworkManager", 
-            "RTCM data received (" + String(bytesRead) + " bytes)");
+            "RTCM data received and validated (" + String(bytesRead) + " bytes)");
         
         return bytesRead;
+    } else if (packetSize > (int)maxSize) {
+        // ENHANCED RTCM VALIDATION: Log oversized packets
+        DiagnosticManager::logError("NetworkManager", 
+            "RTCM packet too large: " + String(packetSize) + " bytes (max " + String(maxSize) + " bytes)");
+        _rtcmUdp.flush(); // Discard oversized packet
+        return -3; // Oversized packet indicator
     }
     
     return 0;
@@ -346,6 +405,272 @@ String NetworkManager::getNetworkStatusString() {
     return status;
 }
 
+void NetworkManager::processRgFModuleUpdateCommands() {
+    // Check for incoming RgFModuleUpdate commands
+    RgFModuleUpdateCommandPacket command;
+    int result = readRgFModuleUpdateCommand(&command);
+    
+    if (result > 0) {
+        // CRITICAL FIX: Ensure all string fields are null-terminated to prevent buffer overflow
+        command.Command[sizeof(command.Command) - 1] = '\0';
+        command.FirmwareUrl[sizeof(command.FirmwareUrl) - 1] = '\0';
+        command.FirmwareHash[sizeof(command.FirmwareHash) - 1] = '\0';
+        
+        // Command received successfully - process it
+        if (strcmp(command.Command, "STATUS_QUERY") == 0) {
+            // Send current module status
+            sendModuleStatusResponse();
+        }
+        else if (strcmp(command.Command, "START_UPDATE") == 0) {
+            // Initiate firmware update
+            handleStartUpdateCommand(&command);
+        }
+        else if (strcmp(command.Command, "ABORT_UPDATE") == 0) {
+            // Abort any ongoing update
+            handleAbortUpdateCommand();
+        }
+        else {
+            logNetworkEvent("RgFModuleUpdate: Unknown command: " + String(command.Command), LOG_WARNING);
+        }
+    }
+}
+
+void NetworkManager::sendModuleStatusResponse() {
+    RgFModuleUpdateStatusPacket status;
+    
+    // Set module identification
+    status.SenderId = (uint8_t)_moduleRole;
+    status.Timestamp = millis();
+    
+    // Get current firmware version from VersionManager
+    FirmwareVersion_t currentVersion = VersionManager::getCurrentVersion();
+    snprintf(status.Version, sizeof(status.Version), "%d.%d.%d", 
+             currentVersion.major, currentVersion.minor, currentVersion.patch);
+    
+    // Set operational status
+    UpdateStatus_t updateStatus = VersionManager::getUpdateStatus();
+    switch (updateStatus) {
+        case UPDATE_IDLE:
+            strcpy(status.Status, "OPERATIONAL");
+            break;
+        case UPDATE_DOWNLOADING:
+            strcpy(status.Status, "UPDATING");
+            strcpy(status.UpdateStage, "Downloading firmware");
+            status.UpdateProgress = VersionManager::getUpdateProgress();
+            break;
+        case UPDATE_VERIFYING:
+            strcpy(status.Status, "UPDATING");
+            strcpy(status.UpdateStage, "Verifying firmware");
+            status.UpdateProgress = VersionManager::getUpdateProgress();
+            break;
+        case UPDATE_FLASHING:
+            strcpy(status.Status, "UPDATING");
+            strcpy(status.UpdateStage, "Flashing firmware");
+            status.UpdateProgress = VersionManager::getUpdateProgress();
+            break;
+        case UPDATE_SUCCESS:
+            strcpy(status.Status, "OPERATIONAL");
+            strcpy(status.UpdateStage, "Update completed");
+            status.UpdateProgress = 100;
+            break;
+        case UPDATE_REBOOTING:
+            strcpy(status.Status, "UPDATING");
+            strcpy(status.UpdateStage, "Rebooting");
+            status.UpdateProgress = 95;
+            break;
+        case UPDATE_ROLLBACK:
+            strcpy(status.Status, "UPDATING");
+            strcpy(status.UpdateStage, "Rolling back");
+            status.UpdateProgress = 50;
+            break;
+        case UPDATE_FAILED:
+            strcpy(status.Status, "ERROR");
+            strcpy(status.UpdateStage, "Update failed");
+            // Note: getLastError method doesn't exist, using generic error message
+            strcpy(status.LastError, "Firmware update failed");
+            break;
+    }
+    
+    // Set system information
+    status.UptimeSeconds = millis() / 1000;
+    status.FreeMemory = getFreeMemory();
+    status.PacketsSent = _packetsSent;
+    status.PacketsReceived = _packetsReceived;
+    
+    // Send the status response
+    sendRgFModuleUpdateStatus(status);
+}
+
+void NetworkManager::handleStartUpdateCommand(const RgFModuleUpdateCommandPacket* command) {
+    logNetworkEvent("RgFModuleUpdate: START_UPDATE command received", LOG_INFO);
+    
+    // Validate the update command
+    if (strlen(command->FirmwareUrl) == 0) {
+        logNetworkEvent("RgFModuleUpdate: Invalid firmware URL", LOG_ERROR);
+        return;
+    }
+    
+    if (strlen(command->FirmwareHash) == 0) {
+        logNetworkEvent("RgFModuleUpdate: Missing firmware hash", LOG_ERROR);
+        return;
+    }
+    
+    if (command->FirmwareSize == 0) {
+        logNetworkEvent("RgFModuleUpdate: Invalid firmware size", LOG_ERROR);
+        return;
+    }
+    
+    // CRITICAL FIX: Check if update is already in progress to prevent concurrent updates
+    UpdateStatus_t currentStatus = VersionManager::getUpdateStatus();
+    if (currentStatus != UPDATE_IDLE && currentStatus != UPDATE_SUCCESS && currentStatus != UPDATE_FAILED) {
+        logNetworkEvent("RgFModuleUpdate: Update already in progress (status: " + String((int)currentStatus) + ") - rejecting concurrent update request", LOG_WARNING);
+        return;
+    }
+    
+    // Check if system is safe for update
+    SafetyCheckResult_t safetyResult = UpdateSafetyManager::isSafeToUpdate();
+    if (safetyResult != SAFETY_OK) {
+        logNetworkEvent("RgFModuleUpdate: System not safe for update - " + String(safetyResultToString(safetyResult)), LOG_WARNING);
+        return;
+    }
+    
+    // Start the firmware update process
+    String firmwareUrl = String(command->FirmwareUrl);
+    String firmwareHash = String(command->FirmwareHash);
+    
+    // Use RgFModuleUpdater to perform the update
+    bool updateStarted = RgFModuleUpdater::performUpdate(firmwareUrl);
+    
+    if (updateStarted) {
+        logNetworkEvent("RgFModuleUpdate: Firmware update started", LOG_INFO);
+    } else {
+        logNetworkEvent("RgFModuleUpdate: Failed to start firmware update", LOG_ERROR);
+    }
+}
+
+void NetworkManager::handleAbortUpdateCommand() {
+    logNetworkEvent("RgFModuleUpdate: ABORT_UPDATE command received", LOG_INFO);
+    
+    // TODO: Implement update abort functionality in RgFModuleUpdater
+    // For now, just log the command
+    logNetworkEvent("RgFModuleUpdate: Update abort not yet implemented", LOG_WARNING);
+}
+
+uint32_t NetworkManager::getFreeMemory() {
+    // Simple free memory estimation for Teensy 4.1
+    char* ramend = (char*)0x20280000;  // 512KB RAM on Teensy 4.1
+    char* heapend = (char*)sbrk(0);
+    return ramend - heapend;
+}
+
 void NetworkManager::logNetworkEvent(const String& event, LogLevel_t level) {
     DiagnosticManager::logMessage(level, "NetworkManager", event);
+}
+
+// =================================================================
+// RgFModuleUpdate Network Protocol Implementation
+// =================================================================
+
+int NetworkManager::readRgFModuleUpdateCommand(RgFModuleUpdateCommandPacket* packet) {
+    if (!_initialized || !packet) {
+        return 0;
+    }
+    
+    int packetSize = _updateCommandUdp.parsePacket();
+    if (packetSize == 0) {
+        return 0; // No packet available
+    }
+    
+    if (packetSize != sizeof(RgFModuleUpdateCommandPacket)) {
+        logNetworkEvent("RgFModuleUpdate: Invalid command packet size: " + String(packetSize), LOG_WARNING);
+        _updateCommandUdp.flush(); // Discard invalid packet
+        return -1;
+    }
+    
+    // Read the packet data
+    int bytesRead = _updateCommandUdp.read((uint8_t*)packet, sizeof(RgFModuleUpdateCommandPacket));
+    
+    if (bytesRead == sizeof(RgFModuleUpdateCommandPacket)) {
+        _packetsReceived++;
+        
+        // CRITICAL FIX: Ensure strings are null-terminated before logging
+        packet->Command[sizeof(packet->Command) - 1] = '\0';
+        packet->FirmwareUrl[sizeof(packet->FirmwareUrl) - 1] = '\0';
+        packet->FirmwareHash[sizeof(packet->FirmwareHash) - 1] = '\0';
+        
+        // Log the received command
+        String logMsg = "RgFModuleUpdate command received: " + String(packet->Command);
+        if (strcmp(packet->Command, "START_UPDATE") == 0) {
+            logMsg += " (URL: " + String(packet->FirmwareUrl) + ", Size: " + String(packet->FirmwareSize) + ")";
+        }
+        logNetworkEvent(logMsg, LOG_INFO);
+        
+        return bytesRead;
+    }
+    
+    logNetworkEvent("RgFModuleUpdate: Failed to read command packet", LOG_ERROR);
+    return -1;
+}
+
+void NetworkManager::sendRgFModuleUpdateStatus(const RgFModuleUpdateStatusPacket& packet) {
+    if (!_initialized) {
+        logNetworkEvent("RgFModuleUpdate: Cannot send status - network not initialized", LOG_ERROR);
+        return;
+    }
+    
+    // Send status packet to Toughbook
+    _updateStatusUdp.beginPacket(TOUGHBOOK_IP, OTA_RESPONSE_PORT);
+    _updateStatusUdp.write((const uint8_t*)&packet, sizeof(RgFModuleUpdateStatusPacket));
+    
+    if (_updateStatusUdp.endPacket()) {
+        _packetsSent++;
+        
+        // Log successful transmission
+        String logMsg = "RgFModuleUpdate status sent: " + String(packet.Status);
+        if (strcmp(packet.Status, "UPDATING") == 0) {
+            logMsg += " (" + String(packet.UpdateProgress) + "% - " + String(packet.UpdateStage) + ")";
+        }
+        logNetworkEvent(logMsg, LOG_DEBUG);
+    } else {
+        logNetworkEvent("RgFModuleUpdate: Failed to send status packet", LOG_ERROR);
+    }
+}
+
+// =================================================================
+// RTCM Data Validation Implementation
+// =================================================================
+
+bool NetworkManager::validateRtcmData(const uint8_t* data, size_t len) {
+    if (!data || len == 0) {
+        return false;
+    }
+    
+    // RTCM3 messages start with preamble 0xD3
+    if (data[0] != 0xD3) {
+        DiagnosticManager::logError("NetworkManager", "Invalid RTCM preamble: 0x" + String(data[0], HEX));
+        return false;
+    }
+    
+    // Basic length validation - RTCM messages are typically 6-1023 bytes
+    if (len < 6 || len > 1023) {
+        DiagnosticManager::logError("NetworkManager", "Invalid RTCM message length: " + String(len) + " bytes");
+        return false;
+    }
+    
+    // Extract message length from header (bits 14-23 of first 3 bytes)
+    if (len >= 3) {
+        uint16_t messageLength = ((data[1] & 0x03) << 8) | data[2];
+        uint16_t expectedTotalLength = messageLength + 6; // Message + header + CRC
+        
+        if (len != expectedTotalLength) {
+            DiagnosticManager::logError("NetworkManager", 
+                "RTCM length mismatch: received " + String(len) + " bytes, expected " + String(expectedTotalLength) + " bytes");
+            return false;
+        }
+    }
+    
+    // Basic CRC validation would go here, but requires full CRC24Q implementation
+    // For now, we'll rely on the above basic format checks
+    
+    return true;
 }

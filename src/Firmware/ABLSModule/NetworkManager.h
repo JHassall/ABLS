@@ -60,6 +60,10 @@ public:
     IPAddress getLocalIP() { return Ethernet.localIP(); }
     String getNetworkStatusString();
     
+    // RgFModuleUpdate protocol (all modules)
+    int readRgFModuleUpdateCommand(RgFModuleUpdateCommandPacket* packet);
+    void sendRgFModuleUpdateStatus(const RgFModuleUpdateStatusPacket& packet);
+    
     // Statistics
     uint32_t getPacketsSent() { return _packetsSent; }
     uint32_t getPacketsReceived() { return _packetsReceived; }
@@ -81,6 +85,8 @@ private:
     EthernetUDP _sensorUdp;     // For sending sensor data to Toughbook
     EthernetUDP _commandUdp;    // For receiving commands from Toughbook (centre only)
     EthernetUDP _rtcmUdp;       // For RTCM correction data
+    EthernetUDP _updateCommandUdp;  // For receiving RgFModuleUpdate commands
+    EthernetUDP _updateStatusUdp;   // For sending RgFModuleUpdate status responses
     
     // Component references
     HydraulicController* _hydraulicController;
@@ -109,8 +115,14 @@ private:
     bool startUDPSockets();
     void processIncomingCommands();
     void processIncomingRtcm();
+    void processRgFModuleUpdateCommands();
+    void sendModuleStatusResponse();
+    void handleStartUpdateCommand(const RgFModuleUpdateCommandPacket* command);
+    void handleAbortUpdateCommand();
+    uint32_t getFreeMemory();
     void updateStatistics();
     void logNetworkEvent(const String& event, LogLevel_t level = LOG_INFO);
+    bool validateRtcmData(const uint8_t* data, size_t len);
 };
 
 #endif // NETWORK_MANAGER_H

@@ -83,4 +83,40 @@ struct ControlCommandPacket {
     uint8_t SystemEnable = 1;        // 1=System enabled
 };
 
+// --- RgFModuleUpdate: Firmware Update Commands ---
+struct RgFModuleUpdateCommandPacket {
+    // Command Metadata
+    char Command[32] = "STATUS_QUERY";  // Commands: STATUS_QUERY, START_UPDATE, ABORT_UPDATE
+    uint32_t Timestamp = 0;
+    
+    // Update Parameters (for START_UPDATE command)
+    char FirmwareUrl[256] = "";         // HTTP URL for firmware download
+    char FirmwareHash[65] = "";         // SHA256 hash (64 chars + null terminator)
+    uint32_t FirmwareSize = 0;          // Expected firmware size in bytes
+    uint16_t VersionMajor = 0;
+    uint16_t VersionMinor = 0;
+    uint16_t VersionPatch = 0;
+};
+
+struct RgFModuleUpdateStatusPacket {
+    // Module Information
+    uint8_t SenderId = SENDER_UNKNOWN;
+    uint32_t Timestamp = 0;
+    
+    // Current Status
+    char Status[32] = "OPERATIONAL";    // OPERATIONAL, UPDATING, ERROR, OFFLINE
+    char Version[32] = "1.0.0";         // Current firmware version
+    uint32_t UptimeSeconds = 0;         // Module uptime in seconds
+    uint32_t FreeMemory = 0;            // Available RAM in bytes
+    
+    // Update Progress (when Status = "UPDATING")
+    uint8_t UpdateProgress = 0;         // 0-100% completion
+    char UpdateStage[64] = "";          // Current update stage description
+    char LastError[128] = "";          // Last error message (if any)
+    
+    // Network Statistics
+    uint32_t PacketsSent = 0;
+    uint32_t PacketsReceived = 0;
+};
+
 #endif // DATA_PACKETS_H

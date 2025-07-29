@@ -245,6 +245,14 @@ void SensorManager::updateGPS() {
                               (_rtkStatus == RTK_FLOAT) ? "Float" : "None";
             DiagnosticManager::logMessage(LOG_INFO, "SensorManager", "RTK status changed to: " + statusStr);
         }
+    } else {
+        // ENHANCED ERROR RECOVERY: Check for GPS timeout
+        if (_lastGpsUpdateTime > 0 && (millis() - _lastGpsUpdateTime > 10000)) { // 10 second timeout
+            if (_gpsValidFix) {
+                DiagnosticManager::logError("SensorManager", "GPS communication timeout - no data for 10 seconds");
+                _gpsValidFix = false; // Mark GPS as invalid due to timeout
+            }
+        }
     }
 }
 
@@ -252,22 +260,65 @@ void SensorManager::updateIMU() {
     // Check if new IMU data is available
     if (_bno080.dataAvailable()) {
         // Read rotation vector (quaternion)
-        _imuQuatI = _bno080.getQuatI();
-        _imuQuatJ = _bno080.getQuatJ();
-        _imuQuatK = _bno080.getQuatK();
-        _imuQuatReal = _bno080.getQuatReal();
+        float quatI = _bno080.getQuatI();
+        float quatJ = _bno080.getQuatJ();
+        float quatK = _bno080.getQuatK();
+        float quatReal = _bno080.getQuatReal();
+        
+        // ENHANCED ERROR RECOVERY: Validate quaternion data
+        float quatMagnitude = sqrt(quatI*quatI + quatJ*quatJ + quatK*quatK + quatReal*quatReal);
+        if (quatMagnitude < 0.9f || quatMagnitude > 1.1f) {
+            DiagnosticManager::logError("SensorManager", "Invalid IMU quaternion magnitude: " + String(quatMagnitude));
+            _imuDataValid = false;
+            return;
+        }
         
         // Read accelerometer
-        _imuAccelX = _bno080.getAccelX();
-        _imuAccelY = _bno080.getAccelY();
-        _imuAccelZ = _bno080.getAccelZ();
+        float accelX = _bno080.getAccelX();
+        float accelY = _bno080.getAccelY();
+        float accelZ = _bno080.getAccelZ();
+        
+        // ENHANCED ERROR RECOVERY: Validate accelerometer data (reasonable range: -50g to +50g)
+        if (abs(accelX) > 50.0f || abs(accelY) > 50.0f || abs(accelZ) > 50.0f) {
+            DiagnosticManager::logError("SensorManager", "Invalid IMU acceleration values detected");
+            _imuDataValid = false;
+            return;
+        }
         
         // Read gyroscope
-        _imuGyroX = _bno080.getGyroX();
-        _imuGyroY = _bno080.getGyroY();
-        _imuGyroZ = _bno080.getGyroZ();
+        float gyroX = _bno080.getGyroX();
+        float gyroY = _bno080.getGyroY();
+        float gyroZ = _bno080.getGyroZ();
+        
+        // ENHANCED ERROR RECOVERY: Validate gyroscope data (reasonable range: -2000 deg/s)
+        if (abs(gyroX) > 2000.0f || abs(gyroY) > 2000.0f || abs(gyroZ) > 2000.0f) {
+            DiagnosticManager::logError("SensorManager", "Invalid IMU gyroscope values detected");
+            _imuDataValid = false;
+            return;
+        }
+        
+        // Data is valid - update stored values
+        _imuQuatI = quatI;
+        _imuQuatJ = quatJ;
+        _imuQuatK = quatK;
+        _imuQuatReal = quatReal;
+        _imuAccelX = accelX;
+        _imuAccelY = accelY;
+        _imuAccelZ = accelZ;
+        _imuGyroX = gyroX;
+        _imuGyroY = gyroY;
+        _imuGyroZ = gyroZ;
         
         _imuDataValid = true;
+        _lastImuUpdateTime = millis(); // Update successful read timestamp
+    } else {
+        // ENHANCED ERROR RECOVERY: Check for IMU timeout
+        if (millis() - _lastImuUpdateTime > 1000) { // 1 second timeout
+            if (_imuDataValid) {
+                DiagnosticManager::logError("SensorManager", "IMU communication timeout - no data for 1 second");
+                _imuDataValid = false;
+            }
+        }
     }
 }
 
@@ -280,13 +331,32 @@ void SensorManager::updateRadar() {
         if (numDistances > 0) {
             uint32_t distance = 0;
             _radar.getPeakDistance(0, distance);
-            _radarDistance = distance / 1000.0f; // Convert mm to meters
-            _radarDataValid = true;
+            
+            // ENHANCED ERROR RECOVERY: Validate radar distance data
+            float distanceMeters = distance / 1000.0f; // Convert mm to meters
+            
+            // Validate reasonable range (0.1m to 10m for boom height sensing)
+            if (distanceMeters < 0.1f || distanceMeters > 10.0f) {
+                DiagnosticManager::logError("SensorManager", "Invalid radar distance: " + String(distanceMeters) + "m (out of range 0.1-10m)");
+                _radarDataValid = false;
+            } else {
+                _radarDistance = distanceMeters;
+                _radarDataValid = true;
+                _lastRadarUpdate = millis(); // Update successful read timestamp
+            }
         } else {
+            // No distances detected - this could be normal (no target) or error
             _radarDataValid = false;
         }
     } else {
+        // ENHANCED ERROR RECOVERY: Radar setup failed
+        DiagnosticManager::logError("SensorManager", "Radar detector reading setup failed");
         _radarDataValid = false;
+        
+        // Check for radar timeout
+        if (millis() - _lastRadarUpdate > 5000) { // 5 second timeout
+            DiagnosticManager::logError("SensorManager", "Radar communication timeout - no successful reads for 5 seconds");
+        }
     }
 }
 
