@@ -18,7 +18,7 @@ ABLS is a comprehensive multi-sensor boom leveling system designed for precision
 🔄 **Real-Time Control**: 100Hz hydraulic control with PID optimization  
 📡 **Network Architecture**: Robust UDP communication with error recovery  
 🔧 **Professional Calibration**: Multi-point sensor correlation with manual level setting  
-🚀 **OTA Updates**: Enterprise-grade firmware update system with rollback  
+🚀 **Network Updates**: Enterprise-grade firmware update system with rollback  
 📊 **Comprehensive Diagnostics**: Real-time health monitoring and error logging
 
 ## System Architecture
@@ -38,7 +38,7 @@ ABLS is a comprehensive multi-sensor boom leveling system designed for precision
 - **Unified Firmware**: Single codebase with GPIO role detection (DIP switch configuration)
 - **Sensor Fusion**: Dead reckoning with GPS/IMU integration at 50Hz output
 - **Network Protocol**: UDP-based with packet validation and error recovery
-- **Update System**: Dual-bank flash with SHA256 verification and automatic rollback
+- **Update System**: Network-based dual-bank flash with SHA256 verification and automatic rollback
 - **Calibration**: Multi-sensor correlation with manual level reference setting
 
 ## Current Development Status
@@ -177,7 +177,7 @@ ABLS/
 │   │       ├── NetworkManager.cpp  # UDP communication
 │   │       ├── HydraulicController.cpp # PID control
 │   │       ├── DiagnosticManager.cpp   # Logging & health
-│   │       └── FlasherX/           # OTA update system
+│   │       └── FlasherX/           # Network update system
 │   ├── ABLSIMUCalibrator/          # WPF calibration application
 │   │   ├── MainWindow.xaml         # Professional UI
 │   │   ├── MainWindow.xaml.cs      # Multi-sensor calibration logic
@@ -225,7 +225,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **AgOpenGPS Community** for the foundation and inspiration
 - **SparkFun Electronics** for excellent sensor modules and libraries
 - **PJRC (Teensy)** for the powerful Teensy 4.1 platform
-- **Joe Pasquariello** for the FlasherX OTA update system
+- **Joe Pasquariello** for the FlasherX network update system
 
 ## Support
 
