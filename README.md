@@ -224,7 +224,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Open Source Libraries and Hardware
 
-- **SparkFun Electronics** ([GitHub](https://github.com/sparkfun)) for excellent Open-Source breakout boards, hookup guides and libraries.
+- **SparkFun Electronics** ([GitHub](https://github.com/sparkfun)) for excellent Open-Source breakout boards, hookup guides, and libraries.
 - **Nathan Seidle** ([GitHub](https://github.com/nseidle)) The truly humble Champion of Open-Source Hardware (http://sparkfun.com) 
 - **Paul Z Clark** ([GitHub](https://github.com/PaulZC)) for SparkFun u-blox library contributions and GPS expertise
 - **PJRC (Teensy)** for the powerful Teensy 4.1 platform and ecosystem
@@ -244,8 +244,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### AI-Assisted Development
 
 - **Simtheory** ([simtheory.ai](https://simtheory.ai/)), the authors and creators of a Very Average AI Podcast - Chris and Michael Sharkey ([This Day in AI](https://podcast.thisdayinai.com/)) for their inspiration and weekly rants!
-- **Claude Sonnet** - AI assistance for rapid prototyping and code generation. Finally, I can ask Dumb Questions and get fantastic answers with no judgment!  This is where AI will truly empower human advancement.
-- **Windsurf** - AI-powered development environment enabling accelerated development of real world tools (as long as you know the limitations, structure projects, and prompt accordingly!)
+- **Claude Sonnet** - AI assistance for rapid prototyping and code generation.
+Thanks to AI, we can now openly ask the dumb questions and get fantastic answers with no judgment!  This is where I believe AI will truly empower human advancement, enabling us and our children to learn, prosper, realise our full potential, and contribute to society in our unique human ways.
+- **Windsurf** - AI-powered development environment enabling accelerated development of real-world tools (as long as you take the time to learn the limitations, structure projects, and prompt accordingly!)
 
 
 ## Support
