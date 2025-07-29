@@ -127,6 +127,17 @@ bool OTAUpdateManager::startUpdate(const OTACommandPacket& command) {
         return false;
     }
     
+    // Create backup of current firmware before update
+    DiagnosticManager::logMessage(LOG_INFO, "OTAUpdateManager", "Creating backup of current firmware");
+    BackupResult_t backupResult = FlashBackupManager::backupCurrentFirmware();
+    if (backupResult != BACKUP_SUCCESS) {
+        String errorMsg = "Failed to backup current firmware: " + String(backupResultToString(backupResult));
+        handleUpdateError(errorMsg);
+        return false;
+    }
+    
+    DiagnosticManager::logMessage(LOG_INFO, "OTAUpdateManager", "Firmware backup completed successfully");
+    
     // Start the update process
     VersionManager::setUpdateStatus(UPDATE_DOWNLOADING, 0);
     
@@ -155,11 +166,21 @@ bool OTAUpdateManager::rollbackFirmware() {
     
     VersionManager::setUpdateStatus(UPDATE_ROLLBACK, 0);
     
-    // Attempt to restore from backup bank
-    if (!restoreFromBackup()) {
-        handleUpdateError("Rollback failed - backup restoration error");
+    // Check if backup is available
+    if (!FlashBackupManager::hasValidBackup()) {
+        handleUpdateError("Rollback failed - no valid backup available");
         return false;
     }
+    
+    // Attempt to restore from backup bank
+    BackupResult_t rollbackResult = FlashBackupManager::restoreFromBackup();
+    if (rollbackResult != BACKUP_SUCCESS) {
+        String errorMsg = "Rollback failed: " + String(backupResultToString(rollbackResult));
+        handleUpdateError(errorMsg);
+        return false;
+    }
+    
+    DiagnosticManager::logMessage(LOG_INFO, "OTAUpdateManager", "Firmware rollback completed successfully");
     
     // Reboot to activate rolled-back firmware
     VersionManager::setUpdateStatus(UPDATE_REBOOTING, 100);
@@ -180,18 +201,22 @@ void OTAUpdateManager::rebootModule() {
 }
 
 bool OTAUpdateManager::performSafetyChecks() {
-    // Check if system is stationary (if applicable)
-    if (!isSystemStationary()) {
-        DiagnosticManager::logError("OTAUpdateManager", "System must be stationary for updates");
+    // Use comprehensive UpdateSafetyManager for safety checks
+    SafetyCheckResult_t safetyResult = UpdateSafetyManager::isSafeToUpdate();
+    
+    if (safetyResult != SAFETY_OK) {
+        String errorMsg = "Safety check failed: " + String(safetyResultToString(safetyResult));
+        DiagnosticManager::logError("OTAUpdateManager", errorMsg);
         return false;
     }
     
-    // Check if all systems are healthy
-    if (!areAllSystemsHealthy()) {
-        DiagnosticManager::logError("OTAUpdateManager", "System health check failed");
+    // Attempt to enter update mode
+    if (!UpdateSafetyManager::enterUpdateMode()) {
+        DiagnosticManager::logError("OTAUpdateManager", "Failed to enter update mode");
         return false;
     }
     
+    DiagnosticManager::logMessage(LOG_INFO, "OTAUpdateManager", "Safety checks passed - update mode active");
     return true;
 }
 
@@ -306,6 +331,9 @@ void OTAUpdateManager::handleUpdateError(const String& error) {
 void OTAUpdateManager::cleanup() {
     _updateInProgress = false;
     
+    // Exit update mode and restore normal operation
+    UpdateSafetyManager::exitUpdateMode();
+    
     // Free firmware buffer
     if (_firmwareBuffer) {
         free(_firmwareBuffer);
@@ -316,6 +344,8 @@ void OTAUpdateManager::cleanup() {
     _bytesReceived = 0;
     _expectedSize = 0;
     _expectedChecksum = 0;
+    
+    DiagnosticManager::logMessage(LOG_INFO, "OTAUpdateManager", "Update cleanup completed - returned to normal mode");
 }
 
 void OTAUpdateManager::reportProgress(UpdateStatus_t status, uint8_t progress, const String& message) {

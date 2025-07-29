@@ -26,6 +26,8 @@
 #include "HydraulicController.h"
 #include "VersionManager.h"
 #include "OTAUpdateManager.h"
+#include "UpdateSafetyManager.h"
+#include "FlashBackupManager.h"
 
 // Global component instances
 SensorManager sensorManager;
@@ -92,6 +94,16 @@ void setup() {
         while(1) { delay(1000); } // Halt on OTA failure
     }
     
+    // Step 6b: Initialize Update Safety Manager
+    Serial.println("Initializing update safety system...");
+    UpdateSafetyManager::init();
+    DiagnosticManager::logMessage(LOG_INFO, "Setup", "Update safety system initialized");
+    
+    // Step 6c: Initialize Flash Backup Manager
+    Serial.println("Initializing firmware backup system...");
+    FlashBackupManager::init();
+    DiagnosticManager::logMessage(LOG_INFO, "Setup", "Firmware backup system initialized");
+    
     // Step 7: Connect components together
     networkManager.setSensorManager(&sensorManager);
     networkManager.setHydraulicController(&hydraulicController);
@@ -113,6 +125,7 @@ void loop() {
     sensorManager.update();
     networkManager.update();
     hydraulicController.update();
+    UpdateSafetyManager::update();
     OTAUpdateManager::update();
     
     // Send sensor data to Toughbook at 50Hz (every 20ms)

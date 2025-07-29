@@ -4,8 +4,11 @@
 #include <Arduino.h>
 #include <QNEthernet.h>
 #include "VersionManager.h"
+#include "DiagnosticManager.h"
 #include "DataPackets.h"
 #include "RgFModuleUpdater.h"
+#include "UpdateSafetyManager.h"
+#include "FlashBackupManager.h"
 
 using namespace qindesign::network;
 

@@ -25,6 +25,7 @@
 #define RGFMODULEUPDATER_H
 
 #include <Arduino.h>
+#include <QNEthernet.h>
 #include "FlasherX/FlashTxx.h"
 #include "DiagnosticManager.h"
 #include "VersionManager.h"
@@ -58,7 +59,8 @@ typedef void (*ProgressCallback)(uint8_t progress, UpdateStatus_t status, const 
 // Firmware validation structure
 struct FirmwareInfo {
     uint32_t size;
-    uint32_t crc32;
+    uint32_t crc32;                    // Legacy CRC32 for compatibility
+    uint8_t sha256_hash[32];           // SHA256 hash for integrity verification
     uint16_t version_major;
     uint16_t version_minor;
     uint16_t version_patch;
@@ -111,6 +113,9 @@ public:
     
     // Utility functions
     static uint32_t calculateCRC32(const uint8_t* data, uint32_t size);
+    static void calculateSHA256(const uint8_t* data, uint32_t size, uint8_t* hash);
+    static bool validateSHA256Hash(const uint8_t* data, uint32_t size, const uint8_t* expectedHash);
+    static String sha256ToString(const uint8_t* hash);
     static bool validateTargetCompatibility(const char* targetId);
     static void reboot();
     
@@ -150,8 +155,9 @@ private:
     static bool validateFirmwareIntegrity(const uint8_t* data, uint32_t size);
     static bool validateFirmwareCompatibility();
     
-    // Network operations (to be implemented with HTTP client)
+    // Network operations
     static bool downloadFromURL(const String& url, uint32_t bufferAddr, uint32_t maxSize);
+    static bool parseHttpUrl(const String& url, String& host, int& port, String& path);
     
     // Constants
     static const uint32_t FIRMWARE_HEADER_SIZE = 256;
