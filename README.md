@@ -224,12 +224,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Open Source Libraries and Hardware
 
-- **Joe Pasquariello** for [FlasherX](https://github.com/joepasquariello/FlasherX) for the bones of the Firmware Updater
-- **SparkFun Electronics** ([GitHub](https://github.com/sparkfun)) for excellent Open-Source Breakouts and libraries, I've been a supporter from day 1!  What a journey.
-- **Nathan Seidle** ([GitHub](https://github.com/nseidle)) The Champion of Open-Sourse Hardware. 
+- **SparkFun Electronics** ([GitHub](https://github.com/sparkfun)) for excellent Open-Source breakout boards, hookup guides and libraries.
+- **Nathan Seidle** ([GitHub](https://github.com/nseidle)) The Champion of Open-Source Hardware. 
 - **Paul Z Clark** ([GitHub](https://github.com/PaulZC)) for SparkFun u-blox library contributions and GPS expertise
 - **PJRC (Teensy)** for the powerful Teensy 4.1 platform and ecosystem
 - **Adafruit Industries** for the ADS1115 ADC library and hardware modules
+- **Joe Pasquariello** for [FlasherX](https://github.com/joepasquariello/FlasherX) for the bones of the Firmware Updater
+
 
 
 ### Specific Library Credits
@@ -242,7 +243,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### AI-Assisted Development
 
-- **Simtheory** ([simtheory.ai](https://simtheory.ai/)), the authors and creators of a Very Average Podcast - Chris and Michael Sharkey ([This Day in AI](https://podcast.thisdayinai.com/)) for their inspiration and weekly rants!
+- **Simtheory** ([simtheory.ai](https://simtheory.ai/)), the authors and creators of a Very Average AI Podcast - Chris and Michael Sharkey ([This Day in AI](https://podcast.thisdayinai.com/)) for their inspiration and weekly rants!
 - **Claude Sonnet** - AI assistance for rapid prototyping, code generation, and technical documentation
 - **Windsurf** - AI-powered development environment enabling accelerated development of real world tools (as long as you know the limitations, structure and prompt accordingly!)
 
