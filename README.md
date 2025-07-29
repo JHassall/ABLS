@@ -244,8 +244,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### AI-Assisted Development
 
 - **Simtheory** ([simtheory.ai](https://simtheory.ai/)), the authors and creators of a Very Average AI Podcast - Chris and Michael Sharkey ([This Day in AI](https://podcast.thisdayinai.com/)) for their inspiration and weekly rants!
-- **Claude Sonnet** - AI assistance for rapid prototyping, code generation, and technical documentation
-- **Windsurf** - AI-powered development environment enabling accelerated development of real world tools (as long as you know the limitations, structure and prompt accordingly!)
+- **Claude Sonnet** - AI assistance for rapid prototyping and code generation. Finally, I can ask Dumb Questions and get fantastic answers with no judgment!  This is where AI will truly empower human advancement.
+- **Windsurf** - AI-powered development environment enabling accelerated development of real world tools (as long as you know the limitations, structure projects, and prompt accordingly!)
 
 
 ## Support
