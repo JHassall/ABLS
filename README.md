@@ -242,6 +242,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### AI-Assisted Development
 
+- **Simtheory** ([simtheory.ai](https://simtheory.ai/)) and the creators of "Very Average Podcast" - Chris and Michael Sharkey ([This Day in AI](https://podcast.thisdayinai.com/)) for their inspiration and advocacy for practical AI applications in Australian innovation
 - **Claude Sonnet** - AI assistance for rapid prototyping, code generation, and technical documentation
 - **Windsurf** - AI-powered development environment enabling accelerated professional development
 
