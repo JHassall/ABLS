@@ -225,7 +225,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Open Source Libraries and Hardware
 
 - **SparkFun Electronics** ([GitHub](https://github.com/sparkfun)) for excellent Open-Source breakout boards, hookup guides and libraries.
-- **Nathan Seidle** ([GitHub](https://github.com/nseidle)) The Champion of Open-Source Hardware. 
+- **Nathan Seidle** ([GitHub](https://github.com/nseidle)) The truly humble Champion of Open-Source Hardware (http://sparkfun.com) 
 - **Paul Z Clark** ([GitHub](https://github.com/PaulZC)) for SparkFun u-blox library contributions and GPS expertise
 - **PJRC (Teensy)** for the powerful Teensy 4.1 platform and ecosystem
 - **Adafruit Industries** for the ADS1115 ADC library and hardware modules
