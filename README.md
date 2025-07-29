@@ -90,7 +90,7 @@ ABLS is a comprehensive multi-sensor boom leveling system designed for precision
 
 - [ ] **ABLS.Core Integration** (Toughbook application)
 - [ ] **DEM Terrain Integration** for predictive boom control
-- [ ] **AgOpenGPS Compatibility** layer
+
 - [ ] **Unity-Based UI** for operator interface
 - [ ] **Advanced Control Algorithms** with machine learning optimization
 
@@ -208,7 +208,7 @@ ABLS/
 
 ## Contributing
 
-This project is part of the AgOpenGPS ecosystem. Contributions are welcome!
+Contributions are welcome!
 
 1. Fork the repository
 2. Create a feature branch
@@ -222,10 +222,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- **AgOpenGPS Community** for the foundation and inspiration
-- **SparkFun Electronics** for excellent sensor modules and libraries
-- **PJRC (Teensy)** for the powerful Teensy 4.1 platform
-- **Joe Pasquariello** for the FlasherX network update system
+### Open Source Libraries and Hardware
+
+- **Joe Pasquariello** for the excellent [FlasherX](https://github.com/joepasquariello/FlasherX) network update system
+- **SparkFun Electronics** ([GitHub](https://github.com/sparkfun)) for excellent sensor modules and Arduino libraries
+- **Nathan Seidle** ([GitHub](https://github.com/nseidle)) for SparkFun library development and open hardware leadership
+- **Paul Z Clark** ([GitHub](https://github.com/PaulZC)) for SparkFun u-blox library contributions and GPS expertise
+- **PJRC (Teensy)** for the powerful Teensy 4.1 platform and ecosystem
+- **Adafruit Industries** for the ADS1115 ADC library and hardware modules
+
+
+### Specific Library Credits
+
+- **SparkFun u-blox GNSS Arduino Library** - High-precision GPS integration
+- **SparkFun BNO080 Arduino Library** - IMU sensor fusion and calibration
+- **SparkFun Qwiic XM125 Arduino Library** - Radar distance detection
+- **QNEthernet Library** - Teensy 4.1 Ethernet networking
+- **Adafruit ADS1115 Library** - 16-bit ADC for hydraulic ram sensing
 
 ## Support
 
@@ -233,7 +246,7 @@ For questions, issues, or contributions:
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/JHassall/ABLS/issues)
 - **Documentation**: See `docs/` directory for technical details
-- **AgOpenGPS Forum**: [Community support and discussions](https://agopengps.discourse.group/)
+
 
 ---
 
