@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyTitle>ABLS Core Library</AssemblyTitle>
-    <AssemblyDescription>Core ABLS boom control classes and functionality</AssemblyDescription>
+    <AssemblyTitle>ABLS Main Console</AssemblyTitle>
+    <AssemblyDescription>ABLS Main Console Application with AgOpenGPS Integration</AssemblyDescription>
     <AssemblyCompany>ABLS Development Team</AssemblyCompany>
     <AssemblyProduct>Automatic Agricultural Boomspray Levelling System</AssemblyProduct>
     <Copyright>Copyright © 2025 ABLS Development Team</Copyright>
@@ -15,9 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <ProjectReference Include="..\ABLS.Core\ABLS.Core.csproj" />
+    <ProjectReference Include="..\..\AOG_Dev\SourceCode\AOG\AOG.csproj" />
   </ItemGroup>
+
+
 
 </Project>

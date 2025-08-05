@@ -1,15 +1,18 @@
 # ABLS - Automatic Agricultural Boomspray Levelling System
 
-**Advanced Precision Agriculture Boom Control for John Deere 4030 Boomspray**
+**Advanced Precision Agriculture Boom Control for John Deere 4030 Boomspray**  
+**Integrated with AgOpenGPS Development Framework**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Teensy%204.1-blue.svg)](https://www.pjrc.com/store/teensy41.html)
-[![Framework](https://img.shields.io/badge/Framework-.NET%208.0-purple.svg)](https://dotnet.microsoft.com/)
+[![Framework](https://img.shields.io/badge/Framework-AgOpenGPS-purple.svg)](https://github.com/farmerbriantee/AgOpenGPS)
 [![Status](https://img.shields.io/badge/Status-Active%20Development-green.svg)](https://github.com/JHassall/ABLS)
 
 ## Overview
 
-ABLS is a comprehensive multi-sensor boom leveling system designed for precision agricultural applications. The system uses advanced sensor fusion combining GPS RTK, IMU, radar, and hydraulic ram feedback to maintain optimal boom height and level across varying terrain conditions.
+ABLS is a comprehensive multi-sensor boom leveling system designed for precision agricultural applications, integrated with the AgOpenGPS development framework. The system uses advanced sensor fusion combining GPS RTK, IMU, radar, and hydraulic ram feedback to maintain optimal boom height and level across varying terrain conditions.
+
+**🔗 AgOpenGPS Integration**: This project builds upon the proven AgOpenGPS platform to provide boom control capabilities while maintaining compatibility with the broader AgOpenGPS ecosystem and contributing developments back to the community.
 
 ### Key Features
 
@@ -19,7 +22,8 @@ ABLS is a comprehensive multi-sensor boom leveling system designed for precision
 📡 **Network Architecture**: Robust UDP communication with error recovery  
 🔧 **Professional Calibration**: Multi-point sensor correlation with manual level setting  
 🚀 **Network Updates**: Enterprise-grade firmware update system with rollback  
-📊 **Comprehensive Diagnostics**: Real-time health monitoring and error logging
+📊 **Comprehensive Diagnostics**: Real-time health monitoring and error logging  
+🤝 **Community Integration**: Built on AgOpenGPS framework for ecosystem compatibility
 
 ## System Architecture
 
@@ -74,7 +78,7 @@ ABLS is a comprehensive multi-sensor boom leveling system designed for precision
 - [x] **Comprehensive 3-Part Technical Reference** (100+ pages)
   - Part 1: System Architecture & Hardware Specifications
   - Part 2: Network Communication & Data Structures
-  - Part 3: Firmware Updates & Integration Guidelines
+  - Part 3: Firmware Updates & Integration
 - [x] **Complete API Documentation** with code examples
 - [x] **Field Deployment Procedures** and troubleshooting guides
 - [x] **Integration Guidelines** for ABLS.Core and Toughbook
@@ -88,10 +92,9 @@ ABLS is a comprehensive multi-sensor boom leveling system designed for precision
 
 ### 📋 Planned Features
 
-- [ ] **ABLS.Core Integration** (Toughbook application)
+- [ ] **AgOpenGPS Integration** (Toughbook application)
 - [ ] **DEM Terrain Integration** for predictive boom control
 
-- [ ] **Unity-Based UI** for operator interface
 - [ ] **Advanced Control Algorithms** with machine learning optimization
 
 ## Quick Start
@@ -182,7 +185,7 @@ ABLS/
 │   │   ├── MainWindow.xaml         # Professional UI
 │   │   ├── MainWindow.xaml.cs      # Multi-sensor calibration logic
 │   │   └── ABLSIMUCalibrator.csproj
-│   ├── ABLS.Core/                  # Toughbook application (planned)
+│   ├── ABLS.Core/                  # AgOpenGPS integration (planned)
 │   └── RgFModuleUpdater/           # Firmware update utility
 └── README.md
 ```
